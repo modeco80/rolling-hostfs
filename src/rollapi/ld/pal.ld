@@ -12,13 +12,24 @@ free = 0x002ded48;
 
 
 /* Hook specific things */
+
 __HOOK_sbrk_break = 0x0048d03c;
 
 /* original value of the Rolling ELF's _end symbol, as captured in the program break adress */
 __HOOK_ORIG_END = 0x004fc02c;
 
-
 /* The fun stuff */
+
+/* PS2 SDK */
+
+/* FIO */
+sceOpen = 0x002bb748;
+sceClose = 0x002bb9d0;
+sceRead = 0x002bbd88;
+sceLSeek = 0x002bbb50;
+
+
+/* Rolling */
 
 main = 0x00146c80;
 mainTrampoline = 0x00146c88;

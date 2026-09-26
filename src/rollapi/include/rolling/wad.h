@@ -34,7 +34,7 @@ int Wad_fwrite(const void* pBuffer, i32 size, i32 nitems, void* wadfile);
 
 // Reads all of a file
 void * Wad_ReadAll(const char* pszFileName);
-int Wad_ReadAllInto(const char* pszFileName, void* pBuffer, u32 count);
+int Wad_ReadAllInto(const char* pszFileName, void* pBuffer, i32 count);
 
 #ifdef __cplusplus
 }
