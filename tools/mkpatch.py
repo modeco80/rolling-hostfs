@@ -25,6 +25,9 @@ PF_X = 1
 PF_W = 2
 PF_R = 4
 
+def alignUp(value: int, align: int) -> int:
+	return (value + align - 1) & ~(align - 1)
+
 def patchInjectCore(original: bytes, patchCore: bytes, patchVirtualLoad: int) -> bytes:
 	# Parse the ELF header.
 	ehdr = list(struct.unpack_from(ELF32_EHDR_FMT, original, 0))
@@ -146,7 +149,7 @@ def main():
 	rollingLief = lief.parse(patched)
 
 	origEnd = rollingLief.get_int_from_virtual_address(ldScript.symbol('__HOOK_sbrk_break'), 4)
-	adjustedEnd = origEnd + len(patchCore)
+	adjustedEnd = alignUp(patchCoreEntry + len(patchCore), 0x1000)
 
 	print(f'Original _end: 0x{origEnd:08x}, patch adjusted: 0x{adjustedEnd:08x}')
 
