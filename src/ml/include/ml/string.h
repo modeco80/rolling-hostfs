@@ -19,6 +19,10 @@ void* memcpy(void* dst, const void* src, u32 len);
 // - strcat
 // - sprintf
 
+// bit of a hack, but saves needing strcpy directly in cases where
+// you only need the literal :)
+#define mlStaticStrCpy(dst, srcStrLiteral) memcpy(dst, &(srcStrLiteral)[0], sizeof(srcStrLiteral))
+
 void strcat(char* dst, const char* src);
 
 int vsprintf(char* pszOut, const char* pszFormat, va_list val);

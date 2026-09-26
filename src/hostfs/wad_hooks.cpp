@@ -10,12 +10,6 @@
 #include <rolling/mem.h>
 #include <sce/fio.h>
 
-// bit of a hack, but saves needing strcpy directly in cases where
-// you only need the literal :)
-#define mlStaticStrCpy(dst, srcStrLiteral) memcpy(dst, &(srcStrLiteral)[0], sizeof(srcStrLiteral))
-
-#define mlMin(a, b) ((a) < (b) ? (a) : (b))
-
 #define FIOMAN_DEBUG
 #define FIOMAN_DEBUG_OPEN
 //#define FIOMAN_DEBUG_READ // verbose as hell
@@ -24,6 +18,12 @@
 /// the size of the read buffer inside each FioFile instance
 /// Try to keep this sensible
 #define FIOMAN_READ_BUFFER_SIZE 0x800
+
+extern "C" {
+	//char ModulePath[64];
+	extern char MusicPath[64];
+	extern char MusicCdSuffix[3];
+}
 
 namespace {
 	/// Wrapper over EE FIO which is a bit easier to use and adds buffering
@@ -320,6 +320,10 @@ bool wadInitHooks() {
 		utilLogf(LogErr, "Failed to hook %s.", #fnName); \
 		return false; \
 	}
+
+	// hostfs music
+	mlStaticStrCpy(MusicPath, "host0:music/%s");
+	MusicCdSuffix[0] = '\0';
 
 	DO_HOOK_FUNC(Wad_Mount);
 	DO_HOOK_FUNC(Wad_Unmount);

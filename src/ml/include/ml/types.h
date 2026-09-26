@@ -72,6 +72,9 @@ typedef ptrdiff_t isize;
 
 #define ml_offsetof(T, Member) ((usize)&(((nil(T*))->Member)))
 
+// TODO if C++ use template inline
+#define mlMin(a, b) ((a) < (b) ? (a) : (b))
+
 #define __ML_STATIC_ASSERT_CONCAT_HELPER(a, b) a##b
 #define __ML_STATIC_ASSERT_CONCAT(a, b) __ML_STATIC_ASSERT_CONCAT_HELPER(a, b)
 #define ML_STATIC_ASSERT(x) typedef u8 __ML_STATIC_ASSERT_CONCAT(__static_assert, __LINE__)[(x) ? 0 : -1]

@@ -35,6 +35,9 @@ sceLSeek = 0x002bbb50;
 main = 0x00146c80;
 mainTrampoline = 0x00146c88;
 
+MusicPath = 0x00492080;
+MusicCdSuffix = 0x004ae0f8;
+
 /* Memory manager */
 memAllocAligned = 0x00148758;
 
