@@ -1,5 +1,4 @@
 #include "utils/log.hpp"
-#include "utils/hook/fnhook.hpp"
 
 bool wadInitHooks();
 
