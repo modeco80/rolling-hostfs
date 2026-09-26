@@ -7,6 +7,8 @@
 extern "C" {
 #endif
 
+// WAD Manager
+
 extern i32 Wad_ReadCount;
 extern i32 Wad_ReadAllFileSize;
 
