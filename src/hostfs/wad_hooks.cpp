@@ -1,5 +1,4 @@
-#include "ml/cxx/freelist.hpp"
-#include "ml/types.h"
+#include <ml/cxx/freelist.hpp>
 #include "utils/log.hpp"
 #include "utils/hook/fnhook.hpp"
 
@@ -97,11 +96,11 @@ namespace {
 				total += n;
 			}
 
-#if defined(FIOMAN_DEBUG) && defined(FIOMAN_DEBUG_READ)
-			//if(count == 0)
-			//	utilLogf(LogInfo, "File::read() read all %d bytes", total);
-			//else
-			//	utilLogf(LogInfo, "File::read() read %d bytes, %d were not read", total, count);
+#if 0//defined(FIOMAN_DEBUG) && defined(FIOMAN_DEBUG_READ)
+			if(count == 0)
+				utilLogf(LogInfo, "File::read() read all %d bytes", total);
+			else
+				utilLogf(LogInfo, "File::read() read %d bytes, %d were not read", total, count);
 #endif
 
 			return total;
@@ -162,12 +161,6 @@ namespace {
 		}
 
 		bool eof() {
-#ifdef FIOMAN_DEBUG
-			utilLogf(LogInfo, "File::eof() ? %s (%d vs %d)", tell() >= fileSize ? "we are at the end": "we are NOT at the end", tell(), fileSize);
-
-			u32 sceTell = sceLSeek(fd, 0, SCE_SEEK_CUR);
-			utilLogf(LogInfo, "File::eof() ? What about the underlying fd? %s (%d vs %d)",  sceTell >= fileSize ? "we are at the end": "we are NOT at the end", sceTell, fileSize);
-#endif
 			return tell() >= fileSize;
 		}
 	};
@@ -240,7 +233,9 @@ FUNC_HOOK(Wad_fexist, i32, const char* pszFileName) {
 
 FUNC_HOOK(Wad_fopen, void*, const char* path, const char* mode) {
 	if(mode[0] == 'w') {
-		utilLogf(LogWarn, "Trying to open %s as read-write. Leaving readonly", path);
+#ifdef FIOMAN_DEBUG
+		utilLogf(LogWarn, "Wad_fopen: Trying to open %s as read-write. Leaving readonly", path);
+#endif
 	}
 
 	File* pFile = openFile(path);
@@ -272,7 +267,9 @@ FUNC_HOOK(Wad_fread, i32, void* pBuffer, i32 size, i32 nitems, void* wadfile) {
 FUNC_HOOK(Wad_fgets, i32, char* pszIn, i32 pszLen, void* handle) {
 	// For now, since I do not think this is ever actually called,
 	// just stub it out.
-	utilLog(LogWarn, "Wad_fgets called??");
+#ifdef FIOMAN_DEBUG
+	utilLog(LogWarn, "Wad_fgets: called??");
+#endif
 	return 0;
 }
 
