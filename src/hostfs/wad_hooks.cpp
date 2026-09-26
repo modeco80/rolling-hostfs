@@ -177,8 +177,12 @@ FUNC_HOOK(Wad_ReadAllInto, i32, const char* pszFileName, void* pBuffer, i32 coun
 	if(pFile == nil(FioFile*))
 		return -1;
 
-	if(count == 0)
+	if(count == 0) {
 		count = pFile->getSize();
+#ifdef FIOMAN_DEBUG
+		utilLogf(LogInfo, "Wad_ReadAllInto: Count was 0, so reading %d bytes instead", count);
+#endif
+	}
 
 	i32 countRead = pFile->read(pBuffer, count);
 
@@ -198,6 +202,8 @@ bool wadInitHooks() {
 
 	DO_HOOK_FUNC(Wad_fopen);
 	DO_HOOK_FUNC(Wad_fclose);
+	DO_HOOK_FUNC(Wad_fexist);
+	DO_HOOK_FUNC(Wad_feof);
 	DO_HOOK_FUNC(Wad_fseek);
 	DO_HOOK_FUNC(Wad_fread);
 	DO_HOOK_FUNC(Wad_fgets);

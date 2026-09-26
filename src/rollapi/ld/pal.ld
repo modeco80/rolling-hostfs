@@ -48,6 +48,7 @@ Wad_fopen = 0x001416a8;
 Wad_fclose = 0x00141760;
 Wad_fexist = 0x00141680;
 Wad_fflush = 0x00141918;
+Wad_feof = 0x00141900;
 
 Wad_fseek = 0x00141800;
 
