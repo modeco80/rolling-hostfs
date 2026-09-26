@@ -11,56 +11,59 @@
 #include <rolling/mem.h>
 #include <sce/fio.h>
 
-/// WSrapper
-class FioFile {
-	i32 fd;
-	u32 size;
-
-	void cacheSize() {
-		sceLSeek(fd, 0, SCE_SEEK_END);
-		size = sceLSeek(fd, 0, SCE_SEEK_CUR);
-		sceLSeek(fd, 0, SCE_SEEK_SET);
-	}
-
-public:
-
-	explicit inline FioFile(i32 fd)
-		: fd(fd) {
-		cacheSize();
-	}
-
-	~FioFile() {
-		sceClose(fd);
-	}
-
-	inline i32 read(void* pvBuf, i32 count) {
-		i32 ret =  sceRead(fd, pvBuf, count);;
-		//utilLogf(LogInfo, "HostFs Read %d -> %d actually read", count, ret);
-		return ret;
-	}
-
-	inline i32 tell() {
-		return sceLSeek(fd, 0, SCE_SEEK_CUR);
-	}
-
-	inline i32 lseek(i32 offset, i32 whence) {
-		return sceLSeek(fd, offset, whence);
-	}
-
-	inline u32 getSize() const {
-		return size;
-	}
-
-	inline bool eof() {
-		return tell() >= size;
-	}
-};
-
 // bit of a hack, but saves needing strcpy directly in cases where
 // you only need the literal :)
 #define mlStaticStrCpy(dst, srcStrLiteral) memcpy(dst, &(srcStrLiteral)[0], sizeof(srcStrLiteral))
 
+#define FIOMAN_DEBUG
+
 namespace {
+	/// Wrapper over EE fio.
+	class FioFile {
+		i32 fd;
+		u32 size;
+
+		void cacheSize() {
+			sceLSeek(fd, 0, SCE_SEEK_END);
+			size = sceLSeek(fd, 0, SCE_SEEK_CUR);
+			sceLSeek(fd, 0, SCE_SEEK_SET);
+		}
+
+	public:
+
+		explicit inline FioFile(i32 fd)
+		: fd(fd) {
+			cacheSize();
+		}
+
+		~FioFile() {
+			sceClose(fd);
+		}
+
+		inline i32 read(void* pvBuf, i32 count) {
+			i32 ret =  sceRead(fd, pvBuf, count);;
+			//utilLogf(LogInfo, "HostFs Read %d -> %d actually read", count, ret);
+			return ret;
+		}
+
+		inline i32 tell() {
+			return sceLSeek(fd, 0, SCE_SEEK_CUR);
+		}
+
+		inline i32 lseek(i32 offset, i32 whence) {
+			return sceLSeek(fd, offset, whence);
+		}
+
+		inline u32 getSize() const {
+			return size;
+		}
+
+		inline bool eof() {
+			return tell() == size;
+		}
+	};
+
+
 	ml::FreeList<FioFile, 8> openFileList;
 
 	void translateFileName(char* pszOut, const char* pszInPath) {
@@ -73,11 +76,25 @@ namespace {
 		if(pFile == nil(FioFile*))
 			return nil(FioFile*);
 
-		i32 fd = sceOpen(path, SCE_RDONLY);
+		char translatedPath[512];
+		translateFileName(&translatedPath[0], path);
+
+#ifdef FIOMAN_DEBUG
+		utilLogf(LogInfo, "HostFS Open %s", translatedPath);
+#endif
+
+		i32 fd = sceOpen(translatedPath, SCE_RDONLY);
 		if(fd < 0) {
+#ifdef FIOMAN_DEBUG
+			utilLogf(LogErr, "HostFS Open FAIL %s", translatedPath);
+#endif
 			openFileList.free(pFile);
 			return nil(FioFile*);
 		}
+
+#ifdef FIOMAN_DEBUG
+		utilLogf(LogInfo, "HostFS Open SUCCESS %s", translatedPath);
+#endif
 
 		// ml freelists don't new objects, so we have to do it ourselves.
 		return new (pFile) FioFile(fd);
@@ -90,10 +107,7 @@ namespace {
 }
 
 FUNC_HOOK(Wad_fexist, i32, const char* pszFileName) {
-	char translatedPath[512];
-	translateFileName(&translatedPath[0], pszFileName);
-
-	FioFile* pFile = openFile(translatedPath);
+	FioFile* pFile = openFile(pszFileName);
 	if(pFile == nil(FioFile*))
 		return 0;
 
@@ -106,18 +120,10 @@ FUNC_HOOK(Wad_fopen, void*, const char* path, const char* mode) {
 		utilLogf(LogWarn, "Trying to open %s as read-write. Leaving readonly");
 	}
 
-	char translatedPath[512];
-	translateFileName(&translatedPath[0], path);
-
-	utilLogf(LogInfo, "HostFS Open %s", translatedPath);
-
-	FioFile* pFile = openFile(translatedPath);
+	FioFile* pFile = openFile(path);
 	if(pFile == nil(FioFile*)) {
-		utilLogf(LogErr, "HostFS Open FAIL %s", translatedPath);
 		return vnil;
 	}
-
-	utilLogf(LogInfo, "HostFS Open SUCCESS %s", translatedPath);
 
 	return reinterpret_cast<void*>(pFile);
 }
@@ -142,16 +148,14 @@ FUNC_HOOK(Wad_fread, i32, void* pBuffer, i32 size, i32 nitems, void* wadfile) {
 }
 
 FUNC_HOOK(Wad_fgets, i32, char* pszIn, i32 pszLen, void* handle) {
-	// For now
-	utilLog(LogInfo, "Wad_fgets called??");
+	// For now, since I do not think this is ever actually called,
+	// just stub it out.
+	utilLog(LogWarn, "Wad_fgets called??");
 	return 0;
 }
 
 FUNC_HOOK(Wad_ReadAll, void*, const char* pszFileName) {
-	char translatedPath[512];
-	translateFileName(&translatedPath[0], pszFileName);
-
-	FioFile* pFile = openFile(translatedPath);
+	FioFile* pFile = openFile(pszFileName);
 	if(pFile == nil(FioFile*))
 		return vnil;
 
@@ -169,10 +173,7 @@ FUNC_HOOK(Wad_ReadAll, void*, const char* pszFileName) {
 }
 
 FUNC_HOOK(Wad_ReadAllInto, i32, const char* pszFileName, void* pBuffer, i32 count) {
-	char translatedPath[512];
-	translateFileName(&translatedPath[0], pszFileName);
-
-	FioFile* pFile = openFile(translatedPath);
+	FioFile* pFile = openFile(pszFileName);
 	if(pFile == nil(FioFile*))
 		return -1;
 
