@@ -2,6 +2,7 @@
 
 /* C library */
 strlen = 0x002e1bb0;
+strcat = 0x002e169c;
 memcpy = 0x002df89c;
 memset = 0x002dfa50;
 sprintf = 0x002e1378;
@@ -34,6 +35,8 @@ sceLSeek = 0x002bbb50;
 main = 0x00146c80;
 mainTrampoline = 0x00146c88;
 
+/* Memory manager */
+memAllocAligned = 0x00148758;
 
 /* Wad manager */
 

@@ -19,6 +19,8 @@ void* memcpy(void* dst, const void* src, u32 len);
 // - strcat
 // - sprintf
 
+void strcat(char* dst, const char* src);
+
 int vsprintf(char* pszOut, const char* pszFormat, va_list val);
 int sprintf(char* out, const char* format, ...);
 
