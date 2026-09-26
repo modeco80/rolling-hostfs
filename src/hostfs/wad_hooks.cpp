@@ -89,11 +89,18 @@ namespace {
 				total += n;
 			}
 
+#if defined(FIOMAN_DEBUG) && defined(FIOMAN_REALLY_DEBUG)
+			if(count == 0)
+				utilLogf(LogInfo, "FioFile::read() read all %d bytes", total);
+			else
+				utilLogf(LogInfo, "FioFile::read() read %d bytes, %d were not read", total, count);
+#endif
+
 			return total;
 		}
 
 		i32 tell() {
-			return sceLSeek(fd, 0, SCE_SEEK_CUR);
+			return (readBufferStart + readBufferPosition);
 		}
 
 		i32 lseek(i32 offset, i32 whence) {
@@ -129,7 +136,10 @@ namespace {
 		}
 
 		bool eof() {
-			return tell() == size;
+#ifdef FIOMAN_DEBUG
+			utilLogf(LogInfo, "FioFile::eof() ? %s (%d vs %d)", tell() >= size ? "we are at the end": "we are NOT at the end", tell(), size);
+#endif
+			return tell() >= size;
 		}
 	};
 
