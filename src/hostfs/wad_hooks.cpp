@@ -15,13 +15,25 @@
 // you only need the literal :)
 #define mlStaticStrCpy(dst, srcStrLiteral) memcpy(dst, &(srcStrLiteral)[0], sizeof(srcStrLiteral))
 
+#define mlMin(a, b) ((a) < (b) ? (a) : (b))
+
 #define FIOMAN_DEBUG
+//#define FIOMAN_REALLY_DEBUG // verbose as hell
+
+/// the size of the read buffer inside each FioFile instance
+/// Try to keep this sensible
+#define FIOMAN_READ_BUFFER_SIZE 0x800
 
 namespace {
-	/// Wrapper over EE fio.
+	/// Wrapper over EE FIO which is a bit easier to use and adds buffering
 	class FioFile {
 		i32 fd;
 		u32 size;
+
+		u32 readBufferPosition;
+		u32 readBufferAvailable;
+		u32 readBufferStart;
+		u8 readBuffer[FIOMAN_READ_BUFFER_SIZE];
 
 		void cacheSize() {
 			sceLSeek(fd, 0, SCE_SEEK_END);
@@ -34,31 +46,89 @@ namespace {
 		explicit inline FioFile(i32 fd)
 		: fd(fd) {
 			cacheSize();
+
+			// Reset buffer state.
+			readBufferAvailable = 0;
+			readBufferPosition = 0;
+			readBufferStart = 0;
 		}
 
 		~FioFile() {
 			sceClose(fd);
 		}
 
-		inline i32 read(void* pvBuf, i32 count) {
-			i32 ret =  sceRead(fd, pvBuf, count);;
-			//utilLogf(LogInfo, "HostFs Read %d -> %d actually read", count, ret);
-			return ret;
+		i32 read(u8* pvBuf, i32 count) {
+			i32 total = 0;
+
+			while(count > 0) {
+				// Check if the buffer has been used up. If so, then we need to read again.
+				if(readBufferPosition == readBufferAvailable) {
+					u32 offset = readBufferStart + readBufferPosition;
+#if defined(FIOMAN_DEBUG) && defined(FIOMAN_REALLY_DEBUG)
+					utilLogf(LogInfo, "FioFile::read() Need to seek to %d to service read buffer", offset);
+#endif
+					sceLSeek(fd, offset, SCE_SEEK_SET);
+
+					readBufferAvailable = sceRead(fd, &readBuffer[0], FIOMAN_READ_BUFFER_SIZE);
+
+					readBufferStart = offset;
+					readBufferPosition = 0;
+
+					if(readBufferAvailable == 0)
+						break;
+				}
+
+				u32 avail = readBufferAvailable - readBufferPosition;
+				u32 n = mlMin(count, avail);
+
+				memcpy(pvBuf, &readBuffer[readBufferPosition], n);
+
+				pvBuf += n;
+				readBufferPosition += n;
+				count -= n;
+				total += n;
+			}
+
+			return total;
 		}
 
-		inline i32 tell() {
+		i32 tell() {
 			return sceLSeek(fd, 0, SCE_SEEK_CUR);
 		}
 
-		inline i32 lseek(i32 offset, i32 whence) {
-			return sceLSeek(fd, offset, whence);
+		i32 lseek(i32 offset, i32 whence) {
+			u32 current = readBufferStart + readBufferPosition;
+			u32 target;
+
+			switch(whence) {
+				case 0: // relative to begin of file
+					target = offset;
+					break;
+				case 1: // relative to current position
+					target = current + offset;
+					break;
+				case 2: // relative to end of file.
+					target = size + offset;
+					break;
+			}
+
+			if (target >= readBufferStart && target <= readBufferStart + readBufferStart) {
+				readBufferPosition = static_cast<i32>(target - readBufferStart);
+				return current;
+			} else {
+				// Discard buffer.
+				readBufferStart = target;
+				readBufferAvailable = 0;
+				readBufferPosition = 0;
+				return sceLSeek(fd, offset, whence);
+			}
 		}
 
-		inline u32 getSize() const {
+		u32 getSize() const {
 			return size;
 		}
 
-		inline bool eof() {
+		bool eof() {
 			return tell() == size;
 		}
 	};
@@ -106,6 +176,14 @@ namespace {
 	}
 }
 
+FUNC_HOOK(Wad_Mount, void, const char* pszWad) {
+	return;
+}
+
+FUNC_HOOK(Wad_Unmount, void) {
+	return;
+}
+
 FUNC_HOOK(Wad_fexist, i32, const char* pszFileName) {
 	FioFile* pFile = openFile(pszFileName);
 	if(pFile == nil(FioFile*))
@@ -142,7 +220,7 @@ FUNC_HOOK(Wad_fseek, i32, void* handle, i32 offset, i32 whence) {
 }
 
 FUNC_HOOK(Wad_fread, i32, void* pBuffer, i32 size, i32 nitems, void* wadfile) {
-	i32 count = reinterpret_cast<FioFile*>(wadfile)->read(pBuffer, nitems * size);
+	i32 count = reinterpret_cast<FioFile*>(wadfile)->read(reinterpret_cast<u8*>(pBuffer), nitems * size);
 	Wad_ReadCount++;
 	return count;
 }
@@ -160,10 +238,12 @@ FUNC_HOOK(Wad_ReadAll, void*, const char* pszFileName) {
 		return vnil;
 
 	void* pvBuf = memAllocAligned(pFile->getSize(), 0x80);
-	if(pvBuf == vnil)
+	if(pvBuf == vnil) {
+		closeFile(pFile);
 		return vnil;
+	}
 
-	i32 count = pFile->read(pvBuf, pFile->getSize());
+	i32 count = pFile->read(reinterpret_cast<u8*>(pvBuf), pFile->getSize());
 
 	closeFile(pFile);
 
@@ -184,7 +264,7 @@ FUNC_HOOK(Wad_ReadAllInto, i32, const char* pszFileName, void* pBuffer, i32 coun
 #endif
 	}
 
-	i32 countRead = pFile->read(pBuffer, count);
+	i32 countRead = pFile->read(reinterpret_cast<u8*>(pBuffer), count);
 
 	closeFile(pFile);
 
@@ -199,6 +279,9 @@ bool wadInitHooks() {
 		utilLogf(LogErr, "Failed to hook %s.", #fnName); \
 		return false; \
 	}
+
+	DO_HOOK_FUNC(Wad_Mount);
+	DO_HOOK_FUNC(Wad_Unmount);
 
 	DO_HOOK_FUNC(Wad_fopen);
 	DO_HOOK_FUNC(Wad_fclose);
