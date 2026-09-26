@@ -18,7 +18,8 @@ SOURCES := \
 	main.cpp \
 	file.cpp \
 	filemanager.cpp \
-	wad_hooks.cpp
+	wad_hooks.cpp \
+	movieplayer_hooks.cpp
 
 LINKSCRIPT = $(OBJDIR)/blob.ld
 LINKLIBS := \

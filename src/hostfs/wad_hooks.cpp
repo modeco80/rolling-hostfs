@@ -118,8 +118,6 @@ bool wadInitHooks() {
 		return false; \
 	}
 
-
-
 	DO_HOOK_FUNC(Wad_Mount);
 	DO_HOOK_FUNC(Wad_Unmount);
 

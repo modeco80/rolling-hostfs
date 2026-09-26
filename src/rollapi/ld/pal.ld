@@ -29,6 +29,12 @@ sceClose = 0x002bb9d0;
 sceRead = 0x002bbd88;
 sceLSeek = 0x002bbb50;
 
+/* libcdvd */
+sceCdSearchFile = 0x002ccd60;
+sceCdStInit = 0x002cd8a0;
+sceCdStStart = 0x002cd8d0;
+sceCdStStop = 0x002cd968;
+sceCdStRead = 0x002cd9a0;
 
 /* Rolling */
 
@@ -40,6 +46,9 @@ MusicCdSuffix = 0x004ae0f8;
 
 ModulePath = 0x00494b00;
 ModuleRebootPackagePath = 0x00494c38;
+
+MoviePrefix = 0x004b1120;
+MovieCdSuffix = 0x004b1128;
 
 
 /* Memory manager */
