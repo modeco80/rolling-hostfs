@@ -16,6 +16,8 @@ SOURCES := \
 	$(RUNTIME) \
 	$(UTILS) \
 	main.cpp \
+	file.cpp \
+	filemanager.cpp \
 	wad_hooks.cpp
 
 LINKSCRIPT = $(OBJDIR)/blob.ld
