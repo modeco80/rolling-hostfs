@@ -18,7 +18,9 @@
 #define mlMin(a, b) ((a) < (b) ? (a) : (b))
 
 #define FIOMAN_DEBUG
-//#define FIOMAN_REALLY_DEBUG // verbose as hell
+#define FIOMAN_DEBUG_OPEN
+//#define FIOMAN_DEBUG_READ // verbose as hell
+//#define FIOMAN_DEBUG_SEEK
 
 /// the size of the read buffer inside each FioFile instance
 /// Try to keep this sensible
@@ -26,24 +28,25 @@
 
 namespace {
 	/// Wrapper over EE FIO which is a bit easier to use and adds buffering
-	class FioFile {
+	class File {
 		i32 fd;
-		u32 size;
+		u32 fileSize;
 
+		// Read buffer state
 		u32 readBufferPosition;
 		u32 readBufferAvailable;
 		u32 readBufferStart;
-		u8 readBuffer[FIOMAN_READ_BUFFER_SIZE];
+		u8* readBuffer;
 
 		void cacheSize() {
 			sceLSeek(fd, 0, SCE_SEEK_END);
-			size = sceLSeek(fd, 0, SCE_SEEK_CUR);
+			fileSize = sceLSeek(fd, 0, SCE_SEEK_CUR);
 			sceLSeek(fd, 0, SCE_SEEK_SET);
 		}
 
 	public:
 
-		explicit inline FioFile(i32 fd)
+		explicit inline File(i32 fd)
 		: fd(fd) {
 			cacheSize();
 
@@ -51,21 +54,26 @@ namespace {
 			readBufferAvailable = 0;
 			readBufferPosition = 0;
 			readBufferStart = 0;
+			readBuffer = reinterpret_cast<u8*>(mlMalloc(FIOMAN_READ_BUFFER_SIZE));
 		}
 
-		~FioFile() {
+		~File() {
+			mlFree(readBuffer);
 			sceClose(fd);
 		}
 
 		i32 read(u8* pvBuf, i32 count) {
 			i32 total = 0;
+#if defined(FIOMAN_DEBUG) && defined(FIOMAN_DEBUG_READ)
+			utilLogf(LogInfo, "File::read(count: %d)", count);
+#endif
 
 			while(count > 0) {
 				// Check if the buffer has been used up. If so, then we need to read again.
 				if(readBufferPosition == readBufferAvailable) {
 					u32 offset = readBufferStart + readBufferPosition;
-#if defined(FIOMAN_DEBUG) && defined(FIOMAN_REALLY_DEBUG)
-					utilLogf(LogInfo, "FioFile::read() Need to seek to %d to service read buffer", offset);
+#if defined(FIOMAN_DEBUG) && defined(FIOMAN_DEBUG_READ)
+					utilLogf(LogInfo, "File::read() Need to seek to %d to service read buffer", offset);
 #endif
 					sceLSeek(fd, offset, SCE_SEEK_SET);
 
@@ -89,11 +97,11 @@ namespace {
 				total += n;
 			}
 
-#if defined(FIOMAN_DEBUG) && defined(FIOMAN_REALLY_DEBUG)
-			if(count == 0)
-				utilLogf(LogInfo, "FioFile::read() read all %d bytes", total);
-			else
-				utilLogf(LogInfo, "FioFile::read() read %d bytes, %d were not read", total, count);
+#if defined(FIOMAN_DEBUG) && defined(FIOMAN_DEBUG_READ)
+			//if(count == 0)
+			//	utilLogf(LogInfo, "File::read() read all %d bytes", total);
+			//else
+			//	utilLogf(LogInfo, "File::read() read %d bytes, %d were not read", total, count);
 #endif
 
 			return total;
@@ -103,9 +111,13 @@ namespace {
 			return (readBufferStart + readBufferPosition);
 		}
 
-		i32 lseek(i32 offset, i32 whence) {
-			u32 current = readBufferStart + readBufferPosition;
-			u32 target;
+		i32 seek(i32 offset, i32 whence) {
+			i32 current = readBufferStart + readBufferPosition;
+			i32 target;
+
+#if defined(FIOMAN_DEBUG) && defined(FIOMAN_DEBUG_SEEK)
+			utilLogf(LogInfo, "File::seek(offset: %d, whence: %d)", offset, whence);
+#endif
 
 			switch(whence) {
 				case 0: // relative to begin of file
@@ -115,36 +127,53 @@ namespace {
 					target = current + offset;
 					break;
 				case 2: // relative to end of file.
-					target = size + offset;
+					// If the offset is not negative or 0 then give up
+					if(offset != 0 && offset > 0)
+						return -1;
+					target = fileSize + offset;
 					break;
 			}
 
-			if (target >= readBufferStart && target <= readBufferStart + readBufferStart) {
+			if(target > fileSize) {
+#if defined(FIOMAN_DEBUG) && defined(FIOMAN_DEBUG_SEEK)
+				utilLogf(LogErr, "File::seek() Invalid target %d", target);
+#endif
+				return -1;
+			}
+
+			if (target >= readBufferStart && target <= readBufferStart + readBufferAvailable) {
 				readBufferPosition = static_cast<i32>(target - readBufferStart);
-				return current;
 			} else {
+#if defined(FIOMAN_DEBUG) && defined(FIOMAN_DEBUG_SEEK)
+				utilLogf(LogInfo, "File::seek() Abandoning buffer");
+#endif
 				// Discard buffer.
 				readBufferStart = target;
 				readBufferAvailable = 0;
 				readBufferPosition = 0;
-				return sceLSeek(fd, offset, whence);
+				sceLSeek(fd, target, whence);
 			}
+
+			return 0;
 		}
 
 		u32 getSize() const {
-			return size;
+			return fileSize;
 		}
 
 		bool eof() {
 #ifdef FIOMAN_DEBUG
-			utilLogf(LogInfo, "FioFile::eof() ? %s (%d vs %d)", tell() >= size ? "we are at the end": "we are NOT at the end", tell(), size);
+			utilLogf(LogInfo, "File::eof() ? %s (%d vs %d)", tell() >= fileSize ? "we are at the end": "we are NOT at the end", tell(), fileSize);
+
+			u32 sceTell = sceLSeek(fd, 0, SCE_SEEK_CUR);
+			utilLogf(LogInfo, "File::eof() ? What about the underlying fd? %s (%d vs %d)",  sceTell >= fileSize ? "we are at the end": "we are NOT at the end", sceTell, fileSize);
 #endif
-			return tell() >= size;
+			return tell() >= fileSize;
 		}
 	};
 
 
-	ml::FreeList<FioFile, 8> openFileList;
+	ml::FreeList<File, 8> openFileList;
 
 	void translateFileName(char* pszOut, const char* pszInPath) {
 		mlStaticStrCpy(pszOut, "host0:");
@@ -157,37 +186,37 @@ namespace {
 				pszOut[i] = '/';
 	}
 
-	FioFile* openFile(const char* path) {
-		FioFile* pFile = openFileList.allocate();
-		if(pFile == nil(FioFile*))
-			return nil(FioFile*);
+	File* openFile(const char* path) {
+		File* pFile = openFileList.allocate();
+		if(pFile == nil(File*))
+			return nil(File*);
 
 		char translatedPath[512];
 		translateFileName(&translatedPath[0], path);
 
-#ifdef FIOMAN_DEBUG
+#if defined(FIOMAN_DEBUG) && defined(FIOMAN_DEBUG_OPEN)
 		utilLogf(LogInfo, "HostFS Open %s", translatedPath);
 #endif
 
 		i32 fd = sceOpen(translatedPath, SCE_RDONLY);
 		if(fd < 0) {
-#ifdef FIOMAN_DEBUG
+#if defined(FIOMAN_DEBUG) && defined(FIOMAN_DEBUG_OPEN)
 			utilLogf(LogErr, "HostFS Open FAIL %s", translatedPath);
 #endif
 			openFileList.free(pFile);
-			return nil(FioFile*);
+			return nil(File*);
 		}
 
-#ifdef FIOMAN_DEBUG
+#if defined(FIOMAN_DEBUG) && defined(FIOMAN_DEBUG_OPEN)
 		utilLogf(LogInfo, "HostFS Open SUCCESS %s", translatedPath);
 #endif
 
 		// ml freelists don't new objects, so we have to do it ourselves.
-		return new (pFile) FioFile(fd);
+		return new (pFile) File(fd);
 	}
 
-	void closeFile(FioFile* pFile) {
-		pFile->~FioFile();
+	void closeFile(File* pFile) {
+		pFile->~File();
 		openFileList.free(pFile);
 	}
 }
@@ -201,8 +230,8 @@ FUNC_HOOK(Wad_Unmount, void) {
 }
 
 FUNC_HOOK(Wad_fexist, i32, const char* pszFileName) {
-	FioFile* pFile = openFile(pszFileName);
-	if(pFile == nil(FioFile*))
+	File* pFile = openFile(pszFileName);
+	if(pFile == nil(File*))
 		return 0;
 
 	closeFile(pFile);
@@ -211,11 +240,11 @@ FUNC_HOOK(Wad_fexist, i32, const char* pszFileName) {
 
 FUNC_HOOK(Wad_fopen, void*, const char* path, const char* mode) {
 	if(mode[0] == 'w') {
-		utilLogf(LogWarn, "Trying to open %s as read-write. Leaving readonly");
+		utilLogf(LogWarn, "Trying to open %s as read-write. Leaving readonly", path);
 	}
 
-	FioFile* pFile = openFile(path);
-	if(pFile == nil(FioFile*)) {
+	File* pFile = openFile(path);
+	if(pFile == nil(File*)) {
 		return vnil;
 	}
 
@@ -223,20 +252,19 @@ FUNC_HOOK(Wad_fopen, void*, const char* path, const char* mode) {
 }
 
 FUNC_HOOK(Wad_fclose, void, void* handle) {
-	closeFile(reinterpret_cast<FioFile*>(handle));
+	closeFile(reinterpret_cast<File*>(handle));
 }
 
 FUNC_HOOK(Wad_feof, i32, void* handle) {
-	return reinterpret_cast<FioFile*>(handle)->eof() ? 1 : 0;
+	return reinterpret_cast<File*>(handle)->eof() ? 1 : 0;
 }
 
 FUNC_HOOK(Wad_fseek, i32, void* handle, i32 offset, i32 whence) {
-	utilLogf(LogInfo, "fseek(%d %d)", offset, whence);
-	return reinterpret_cast<FioFile*>(handle)->lseek(offset, whence);
+	return reinterpret_cast<File*>(handle)->seek(offset, whence);
 }
 
 FUNC_HOOK(Wad_fread, i32, void* pBuffer, i32 size, i32 nitems, void* wadfile) {
-	i32 count = reinterpret_cast<FioFile*>(wadfile)->read(reinterpret_cast<u8*>(pBuffer), nitems * size);
+	i32 count = reinterpret_cast<File*>(wadfile)->read(reinterpret_cast<u8*>(pBuffer), nitems * size);
 	Wad_ReadCount++;
 	return count;
 }
@@ -249,8 +277,8 @@ FUNC_HOOK(Wad_fgets, i32, char* pszIn, i32 pszLen, void* handle) {
 }
 
 FUNC_HOOK(Wad_ReadAll, void*, const char* pszFileName) {
-	FioFile* pFile = openFile(pszFileName);
-	if(pFile == nil(FioFile*))
+	File* pFile = openFile(pszFileName);
+	if(pFile == nil(File*))
 		return vnil;
 
 	void* pvBuf = memAllocAligned(pFile->getSize(), 0x80);
@@ -269,8 +297,8 @@ FUNC_HOOK(Wad_ReadAll, void*, const char* pszFileName) {
 }
 
 FUNC_HOOK(Wad_ReadAllInto, i32, const char* pszFileName, void* pBuffer, i32 count) {
-	FioFile* pFile = openFile(pszFileName);
-	if(pFile == nil(FioFile*))
+	File* pFile = openFile(pszFileName);
+	if(pFile == nil(File*))
 		return -1;
 
 	if(count == 0) {
