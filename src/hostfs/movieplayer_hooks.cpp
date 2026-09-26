@@ -1,15 +1,15 @@
-#include "filemanager.hpp"
+#include <sce/cdvd.h>
+
 #include "file.hpp"
+#include "filemanager.hpp"
 #include "utils/hook/fnhook.hpp"
 #include "utils/log.hpp"
-
-#include <sce/cdvd.h>
 
 // These hooks define a "fake" version of the sceCdSt* API functions,
 // which are fully compatible in place with the original APIs, but
 // use our FileMan_*/File APIs, which are hostfs.
 
-#define CDST_DEBUG
+// #define CDST_DEBUG
 
 // Fake version of the sceCdlFILE struct we return.
 struct sceCdFile {
@@ -38,7 +38,6 @@ FUNC_HOOK(sceCdSearchFile, i32, sceCdFile* pfile, const char* path) {
 }
 
 extern "C" void sceSifFreeIopHeap(u32);
-
 
 FUNC_HOOK(sceCdStInit, i32, u32 maxBuffers, u32 maxBanks, u32 iopBuffer) {
 #ifdef CDST_DEBUG
@@ -80,10 +79,10 @@ FUNC_HOOK0(sceCdStStop, i32) {
 }
 
 bool movieInitHooks() {
-#define DO_HOOK_FUNC(fnName) \
-	if(!hook_##fnName.hook()) { \
+#define DO_HOOK_FUNC(fnName)                             \
+	if(!hook_##fnName.hook()) {                          \
 		utilLogf(LogErr, "Failed to hook %s.", #fnName); \
-		return false; \
+		return false;                                    \
 	}
 
 	DO_HOOK_FUNC(sceCdSearchFile);

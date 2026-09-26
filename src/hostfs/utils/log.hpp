@@ -16,8 +16,8 @@ void utilLogf(LogLevel level, const char* pszMessage, ...);
 
 #else
 
-#define utilLog(level, m) (void)0
-#define utilLogf(level, m, ...) (void)0
+	#define utilLog(level, m) (void)0
+	#define utilLogf(level, m, ...) (void)0
 
 #endif
 

@@ -7,7 +7,7 @@
 extern "C" {
 #endif
 
-	void* memAllocAligned(u32 count, i32 align);
+void* memAllocAligned(u32 count, i32 align);
 
 #ifdef __cplusplus
 }

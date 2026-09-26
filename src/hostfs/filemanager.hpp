@@ -12,5 +12,4 @@ class File;
 File* FileMan_openFile(const char* pszFileName);
 void FileMan_closeFile(File* pFile);
 
-
 #endif

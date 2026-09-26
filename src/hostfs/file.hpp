@@ -5,9 +5,8 @@
 
 #define FIOMAN_DEBUG
 #define FIOMAN_DEBUG_OPEN
-//#define FIOMAN_DEBUG_READ // verbose as hell
-//#define FIOMAN_DEBUG_SEEK
-
+// #define FIOMAN_DEBUG_READ // verbose as hell
+// #define FIOMAN_DEBUG_SEEK
 
 /// Wrapper over EE FIO which is a bit easier to use and adds buffering
 class File {
@@ -22,12 +21,12 @@ class File {
 
 	void cacheSize();
 
-public:
-
+   public:
 	explicit File(i32 fd);
-
 	~File();
+
 	i32 read(u8* pvBuf, i32 count);
+
 	i32 tell();
 
 	i32 seek(i32 offset, i32 whence);

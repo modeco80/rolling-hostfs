@@ -1,12 +1,13 @@
-#include "utils/log.hpp"
-#include <sce/fio.h>
-#include <ml/mem.h>
-#include <ml/cxx/freelist.hpp>
-
 #include "filemanager.hpp"
-#include "file.hpp"
 
+#include <ml/mem.h>
+#include <sce/fio.h>
+
+#include <ml/cxx/freelist.hpp>
 #include <new>
+
+#include "file.hpp"
+#include "utils/log.hpp"
 
 namespace {
 	ml::FreeList<File, FILEMAN_MAX_FILES> openFileList;
@@ -17,11 +18,11 @@ namespace {
 
 		// Fix up the objectively incorrect directory seperator to the correct one.
 		const u32 len = strlen(pszOut);
-		for(u32 i = sizeof("host0:")-1; i < len; ++i)
+		for(u32 i = sizeof("host0:") - 1; i < len; ++i)
 			if(pszOut[i] == '\\')
 				pszOut[i] = '/';
 	}
-}
+} // namespace
 
 File* FileMan_openFile(const char* path) {
 	File* pFile = openFileList.allocate();
@@ -49,11 +50,10 @@ File* FileMan_openFile(const char* path) {
 #endif
 
 	// ml freelists don't new objects, so we have to do it ourselves.
-	return new (pFile) File(fd);
+	return new(pFile) File(fd);
 }
 
 void FileMan_closeFile(File* pFile) {
 	pFile->~File();
 	openFileList.free(pFile);
 }
-

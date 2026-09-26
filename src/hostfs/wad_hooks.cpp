@@ -1,15 +1,14 @@
-#include <ml/cxx/freelist.hpp>
-#include "utils/log.hpp"
-#include "utils/hook/fnhook.hpp"
-
-#include "filemanager.hpp"
-#include "file.hpp"
-
 #include <ml/mem.h>
 #include <ml/string.h>
-#include <rolling/wad.h>
 #include <rolling/mem.h>
+#include <rolling/wad.h>
 
+#include <ml/cxx/freelist.hpp>
+
+#include "file.hpp"
+#include "filemanager.hpp"
+#include "utils/hook/fnhook.hpp"
+#include "utils/log.hpp"
 
 FUNC_HOOK(Wad_Mount, void, const char* pszWad) {
 	return;
@@ -29,12 +28,6 @@ FUNC_HOOK(Wad_fexist, i32, const char* pszFileName) {
 }
 
 FUNC_HOOK(Wad_fopen, void*, const char* path, const char* mode) {
-	if(mode[0] == 'w') {
-#ifdef FIOMAN_DEBUG
-		utilLogf(LogWarn, "Wad_fopen: Trying to open %s as read-write. Leaving readonly", path);
-#endif
-	}
-
 	File* pFile = FileMan_openFile(path);
 	if(pFile == nil(File*)) {
 		return vnil;
@@ -97,9 +90,6 @@ FUNC_HOOK(Wad_ReadAllInto, i32, const char* pszFileName, void* pBuffer, i32 coun
 
 	if(count == 0) {
 		count = pFile->getSize();
-#ifdef FIOMAN_DEBUG
-		utilLogf(LogInfo, "Wad_ReadAllInto: Count was 0, so reading %d bytes instead", count);
-#endif
 	}
 
 	i32 countRead = pFile->read(reinterpret_cast<u8*>(pBuffer), count);
@@ -112,10 +102,10 @@ FUNC_HOOK(Wad_ReadAllInto, i32, const char* pszFileName, void* pBuffer, i32 coun
 }
 
 bool wadInitHooks() {
-#define DO_HOOK_FUNC(fnName) \
-	if(!hook_##fnName.hook()) { \
+#define DO_HOOK_FUNC(fnName)                             \
+	if(!hook_##fnName.hook()) {                          \
 		utilLogf(LogErr, "Failed to hook %s.", #fnName); \
-		return false; \
+		return false;                                    \
 	}
 
 	DO_HOOK_FUNC(Wad_Mount);

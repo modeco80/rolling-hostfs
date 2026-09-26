@@ -2,7 +2,6 @@
 # Reformat source tree
 
 SOURCE_DIRS=(
- include/
  src/
 )
 

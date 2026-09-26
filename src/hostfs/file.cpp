@@ -1,7 +1,8 @@
 #include "file.hpp"
-#include <sce/fio.h>
+
 #include <ml/mem.h>
 #include <ml/string.h>
+#include <sce/fio.h>
 
 /// the size of the read buffer inside each FioFile instance
 /// Try to keep this sensible
@@ -13,9 +14,8 @@ void File::cacheSize() {
 	sceLSeek(fd, 0, SCE_SEEK_SET);
 }
 
-
 File::File(i32 fd)
-: fd(fd) {
+	: fd(fd) {
 	cacheSize();
 
 	// Reset buffer state.
@@ -65,7 +65,7 @@ i32 File::read(u8* pvBuf, i32 count) {
 		total += n;
 	}
 
-#if 0//defined(FIOMAN_DEBUG) && defined(FIOMAN_DEBUG_READ)
+#if 0 // defined(FIOMAN_DEBUG) && defined(FIOMAN_DEBUG_READ)
 	if(count == 0)
 		utilLogf(LogInfo, "File::read() read all %d bytes", total);
 	else
@@ -98,8 +98,8 @@ i32 File::seek(i32 offset, i32 whence) {
 			// If the offset is not negative or 0 then give up
 			if(offset != 0 && offset > 0)
 				return -1;
-		target = fileSize + offset;
-		break;
+			target = fileSize + offset;
+			break;
 	}
 
 	if(target > fileSize) {
@@ -109,7 +109,7 @@ i32 File::seek(i32 offset, i32 whence) {
 		return -1;
 	}
 
-	if (target >= readBufferStart && target <= readBufferStart + readBufferAvailable) {
+	if(target >= readBufferStart && target <= readBufferStart + readBufferAvailable) {
 		readBufferPosition = static_cast<i32>(target - readBufferStart);
 	} else {
 #if defined(FIOMAN_DEBUG) && defined(FIOMAN_DEBUG_SEEK)

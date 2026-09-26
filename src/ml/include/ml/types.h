@@ -70,7 +70,7 @@ typedef ptrdiff_t isize;
 /// Defines a variable which has the type of the expression.
 #define ml_autovar(name, xpr) __typeof__((xpr)) name = xpr
 
-#define ml_offsetof(T, Member) ((usize)&(((nil(T*))->Member)))
+#define ml_offsetof(T, Member) ((usize) & (((nil(T*))->Member)))
 
 // TODO if C++ use template inline
 #define mlMin(a, b) ((a) < (b) ? (a) : (b))

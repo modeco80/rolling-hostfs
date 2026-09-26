@@ -1,14 +1,15 @@
-#include "utils/log.hpp"
 #include <ml/string.h>
 
-extern "C" {
-	extern char ModulePath[64];
-	extern char ModuleRebootPackagePath[64];
-	extern char MusicPath[64];
-	extern char MusicCdSuffix[3];
+#include "utils/log.hpp"
 
-	extern char MoviePrefix[2];
-	extern char MovieCdSuffix[3];
+extern "C" {
+extern char ModulePath[64];
+extern char ModuleRebootPackagePath[64];
+extern char MusicPath[64];
+extern char MusicCdSuffix[3];
+
+extern char MoviePrefix[2];
+extern char MovieCdSuffix[3];
 }
 
 // wad_hooks.cpp
@@ -39,7 +40,6 @@ extern "C" int modMain() {
 		utilLog(LogErr, "Failed to hook movie functions.");
 		return 1;
 	}
-
 
 	return 0;
 }
