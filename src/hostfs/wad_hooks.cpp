@@ -149,6 +149,12 @@ namespace {
 	void translateFileName(char* pszOut, const char* pszInPath) {
 		mlStaticStrCpy(pszOut, "host0:");
 		strcat(pszOut, pszInPath);
+
+		// Fix up the objectively incorrect directory seperator to the correct one.
+		const u32 len = strlen(pszOut);
+		for(u32 i = sizeof("host0:")-1; i < len; ++i)
+			if(pszOut[i] == '\\')
+				pszOut[i] = '/';
 	}
 
 	FioFile* openFile(const char* path) {
