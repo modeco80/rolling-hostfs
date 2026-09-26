@@ -38,6 +38,10 @@ mainTrampoline = 0x00146c88;
 MusicPath = 0x00492080;
 MusicCdSuffix = 0x004ae0f8;
 
+ModulePath = 0x00494b00;
+ModuleRebootPackagePath = 0x00494c38;
+
+
 /* Memory manager */
 memAllocAligned = 0x00148758;
 

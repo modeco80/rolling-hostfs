@@ -19,12 +19,6 @@
 /// Try to keep this sensible
 #define FIOMAN_READ_BUFFER_SIZE 0x800
 
-extern "C" {
-	//char ModulePath[64];
-	extern char MusicPath[64];
-	extern char MusicCdSuffix[3];
-}
-
 namespace {
 	/// Wrapper over EE FIO which is a bit easier to use and adds buffering
 	class File {
@@ -321,9 +315,7 @@ bool wadInitHooks() {
 		return false; \
 	}
 
-	// hostfs music
-	mlStaticStrCpy(MusicPath, "host0:music/%s");
-	MusicCdSuffix[0] = '\0';
+
 
 	DO_HOOK_FUNC(Wad_Mount);
 	DO_HOOK_FUNC(Wad_Unmount);
