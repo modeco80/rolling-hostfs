@@ -2,6 +2,7 @@
 
 #include <ml/mem.h>
 #include <sce/fio.h>
+#include <ml/abort.h>
 
 #include <ml/cxx/freelist.hpp>
 #include <new>
@@ -26,8 +27,10 @@ namespace {
 
 File* FileMan_openFile(const char* path) {
 	File* pFile = openFileList.allocate();
-	if(pFile == nil(File*))
+	if(pFile == nil(File*)) {
+		utilLog(LogErr, "FileMan: We somehow exhausted all file handles???");
 		return nil(File*);
+	}
 
 	char translatedPath[512];
 	translateFileName(&translatedPath[0], path);

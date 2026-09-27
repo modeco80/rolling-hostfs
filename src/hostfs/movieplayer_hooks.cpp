@@ -1,5 +1,8 @@
 #include <sce/cdvd.h>
 
+#include <ml/mem.h>
+#include <ml/string.h>
+
 #include "file.hpp"
 #include "filemanager.hpp"
 #include "utils/hook/fnhook.hpp"
@@ -9,11 +12,11 @@
 // which are fully compatible in place with the original APIs, but
 // use our FileMan_*/File APIs, which are hostfs.
 
-// #define CDST_DEBUG
+//#define CDST_DEBUG
 
 // Fake version of the sceCdlFILE struct we return.
 struct sceCdFile {
-	File* pFile;
+	const char* pszName;
 	u32 size;
 
 	char name[16];
@@ -21,6 +24,7 @@ struct sceCdFile {
 	u32 flag;
 };
 
+char gszCurrentCdStreamFileName[64];
 File* gpCurrentCdStreamFile = nil(File*);
 
 FUNC_HOOK(sceCdSearchFile, i32, sceCdFile* pfile, const char* path) {
@@ -28,16 +32,16 @@ FUNC_HOOK(sceCdSearchFile, i32, sceCdFile* pfile, const char* path) {
 	if(pHostFile == nil(File*))
 		return -1;
 
-	// Set up the fake cdlfile struct. We get the pfile in sceCdStStart.
-	pfile->pFile = pHostFile;
+	// Copy the name to our temporary file name buffer.
+	memcpy(&gszCurrentCdStreamFileName[0], path, strlen(path)+1);
+
+	// Set up the fake cdlfile struct.
+	pfile->pszName = gszCurrentCdStreamFileName;
 	pfile->size = pHostFile->getSize();
-#ifdef CDST_DEBUG
-	utilLogf(LogInfo, "sceCdSearchFile(): Host file is 0x%08x", pHostFile);
-#endif
+
+	FileMan_closeFile(pHostFile);
 	return 1;
 }
-
-extern "C" void sceSifFreeIopHeap(u32);
 
 FUNC_HOOK(sceCdStInit, i32, u32 maxBuffers, u32 maxBanks, u32 iopBuffer) {
 #ifdef CDST_DEBUG
@@ -46,22 +50,32 @@ FUNC_HOOK(sceCdStInit, i32, u32 maxBuffers, u32 maxBanks, u32 iopBuffer) {
 	return 1;
 }
 
-FUNC_HOOK(sceCdStStart, i32, File* pfile, void* rmode) {
+FUNC_HOOK(sceCdStStart, i32, const char* pszFileName, void* rmode) {
 #ifdef CDST_DEBUG
-	utilLogf(LogInfo, "sceCdStStart() active, file is 0x%08x", pfile);
+	utilLogf(LogInfo, "sceCdStStart() active, filename is %s", pszFileName);
 #endif
-	gpCurrentCdStreamFile = pfile;
+	gpCurrentCdStreamFile = FileMan_openFile(pszFileName);
+	// This shouldn't fail, but ToCToU safety is a good thing.
+	if(gpCurrentCdStreamFile == nil(File*))
+		return 0;
 	return 1;
 }
 
 FUNC_HOOK(sceCdStRead, i32, u32 size, u32* buf, u32 mode, u32* err) {
 	if(gpCurrentCdStreamFile == nil(File*)) {
 		// no stream active
-		return 0;
+#ifdef CDST_DEBUG
+		utilLogf(LogInfo, "sceCdStRead(): No active stream");
+#endif
+		return -1;
 	}
 
-	if(gpCurrentCdStreamFile->eof())
-		return 0;
+	if(gpCurrentCdStreamFile->eof()) {
+#ifdef CDST_DEBUG
+		utilLogf(LogInfo, "sceCdStRead(): Stream has ended");
+#endif
+		return -1;
+	}
 
 	gpCurrentCdStreamFile->read(reinterpret_cast<u8*>(&buf[0]), size * 0x800);
 	return size;
