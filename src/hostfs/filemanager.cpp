@@ -48,10 +48,6 @@ File* FileMan_openFile(const char* path) {
 		return nil(File*);
 	}
 
-#if defined(FIOMAN_DEBUG) && defined(FIOMAN_DEBUG_OPEN)
-	utilLogf(LogInfo, "HostFS Open SUCCESS %s", translatedPath);
-#endif
-
 	// ml freelists don't new objects, so we have to do it ourselves.
 	return new(pFile) File(fd);
 }

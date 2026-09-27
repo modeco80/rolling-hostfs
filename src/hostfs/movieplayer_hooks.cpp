@@ -54,14 +54,17 @@ FUNC_HOOK(sceCdStStart, i32, const char* pszFileName, void* rmode) {
 #ifdef CDST_DEBUG
 	utilLogf(LogInfo, "sceCdStStart() active, filename is %s", pszFileName);
 #endif
+
+	// Open the CD stream file.
 	gpCurrentCdStreamFile = FileMan_openFile(pszFileName);
 	// This shouldn't fail, but ToCToU safety is a good thing.
 	if(gpCurrentCdStreamFile == nil(File*))
 		return 0;
+
 	return 1;
 }
 
-FUNC_HOOK(sceCdStRead, i32, u32 size, u32* buf, u32 mode, u32* err) {
+FUNC_HOOK(sceCdStRead, i32, u32 sectorCount, u32* buf, u32 mode, u32* err) {
 	if(gpCurrentCdStreamFile == nil(File*)) {
 		// no stream active
 #ifdef CDST_DEBUG
@@ -77,8 +80,9 @@ FUNC_HOOK(sceCdStRead, i32, u32 size, u32* buf, u32 mode, u32* err) {
 		return -1;
 	}
 
-	gpCurrentCdStreamFile->read(reinterpret_cast<u8*>(&buf[0]), size * 0x800);
-	return size;
+	i32 nRead = gpCurrentCdStreamFile->read(reinterpret_cast<u8*>(&buf[0]), sectorCount * 0x800);
+	// Return the amount of sectors actually read
+	return nRead / 0x800;
 }
 
 FUNC_HOOK0(sceCdStStop, i32) {
