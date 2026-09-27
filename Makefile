@@ -15,6 +15,7 @@ define makeall
 $(call submake,src/ml/lib/hw,$(1))
 $(call submake,src/ml/lib/core,$(1))
 $(call submake,src/ml/lib/cxx,$(1))
+$(call submake,src/utils,$(1))
 $(call submake,src/hostfs,$(1))
 endef
 

@@ -1,4 +1,5 @@
-#include "log.hpp"
+#include <utils/log.hpp>
+
 #ifdef LOG_ENABLED
 
 	#include <ml/abort.h>

@@ -3,6 +3,8 @@
 # These files in //mk are intended to be the only major source of most recipes
 # and rules in the build system, excluding any special extra rules.
 
+DEBUG ?= 0
+
 include $(TOP)/mk/ports.mk
 include $(TOP)/mk/ee.mk
 include $(TOP)/mk/objects.mk

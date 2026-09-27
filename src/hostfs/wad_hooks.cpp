@@ -7,8 +7,8 @@
 
 #include "file.hpp"
 #include "filemanager.hpp"
-#include "utils/hook/fnhook.hpp"
-#include "utils/log.hpp"
+#include <utils/hook/fnhook.hpp>
+#include <utils/log.hpp>
 
 FUNC_REPLACE(Wad_Mount, void, const char* pszWad) {
 	// The memory card system, oddly enough, takes over the WAD read buffer

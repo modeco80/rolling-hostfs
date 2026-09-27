@@ -1,6 +1,6 @@
 #include <ml/types.h>
 
-#include "../utils/log.hpp"
+#include <utils/log.hpp>
 
 extern "C" ml_noreturn void mlAbort(const char* msg) {
 	utilLogf(LogErr, "ML abort: %s", msg);

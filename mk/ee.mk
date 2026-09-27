@@ -15,6 +15,11 @@ ML_INCLUDE := -I$(TOP)/src/ml/include
 CCFLAGS := -G0 -O3 -ffreestanding -nostdlib $(ML_INCLUDE) $(USER_CFLAGS)
 CXXFLAGS := -G0 -O3 -ffreestanding -fno-rtti -fno-exceptions -nostdlib $(ML_INCLUDE) $(USER_CFLAGS) $(USER_CXXFLAGS)
 
+ifeq ($(DEBUG),0)
+CCFLAGS += -DNDEBUG
+CXXFLAGS += -DNDEBUG
+endif
+
 BINDIR := bin
 OBJDIR := obj
 

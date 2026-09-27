@@ -1,7 +1,7 @@
 #ifndef UTILS_HOOK_FNHOOK_HPP
 #define UTILS_HOOK_FNHOOK_HPP
 
-#include "trampoline.hpp"
+#include <utils/hook/trampoline.hpp>
 
 #define FUNC_HOOK0(funcName, ret)                                                             \
 	static class Hook_##funcName {                                                            \

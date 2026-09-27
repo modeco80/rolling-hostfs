@@ -3,7 +3,7 @@
 
 // Class hooking helpers.
 
-#include "trampoline.hpp"
+#include <utils/hook/trampoline.hpp>
 
 #define CLASS_HOOK0(ret, className, funcName)                                          \
 	static class Hook_##className##_##funcName {                                       \

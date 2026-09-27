@@ -8,13 +8,8 @@ RUNTIME := \
 	crt0.S \
 	runtime/ml_abort.cpp
 
-UTILS := \
-	utils/log.cpp \
-	utils/hook/trampoline.cpp
-
 SOURCES := \
 	$(RUNTIME) \
-	$(UTILS) \
 	main.cpp \
 	file.cpp \
 	filemanager.cpp \
@@ -23,12 +18,15 @@ SOURCES := \
 
 LINKSCRIPT = $(OBJDIR)/blob.ld
 LINKLIBS := \
+	../utils/obj/libutils.a \
 	../ml/lib/core/obj/libml3_core.a \
 	../ml/lib/cxx/obj/libml3_cxx.a \
-	../ml/lib/hw/obj/libml3_hw.a
+	../ml/lib/hw/obj/libml3_hw.a \
 
 # User C/CXX flags.
-USER_CFLAGS = -DMOD_REGION_$(REGION) -I $(TOP)/src/rollapi/include
+USER_CFLAGS = -DMOD_REGION_$(REGION) \
+	-I $(TOP)/src/rollapi/include \
+	-I $(TOP)/src/utils/include
 USER_CXXFLAGS := \
 	-Wno-pmf-conversions
 

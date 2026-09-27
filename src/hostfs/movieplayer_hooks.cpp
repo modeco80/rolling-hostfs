@@ -5,8 +5,8 @@
 
 #include "file.hpp"
 #include "filemanager.hpp"
-#include "utils/hook/fnhook.hpp"
-#include "utils/log.hpp"
+#include <utils/hook/fnhook.hpp>
+#include <utils/log.hpp>
 
 // These hooks define a "fake" version of the sceCdSt* API functions,
 // which are fully compatible in place with the original APIs, but
