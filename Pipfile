@@ -7,6 +7,7 @@ name = "pypi"
 pyelftools = "*"
 regex = "*"
 lief = "*"
+pyxdelta = "*"
 
 [dev-packages]
 

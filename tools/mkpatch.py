@@ -12,6 +12,7 @@ from utils.elf import ElfWrapper
 from utils.ldparse import LdScript
 
 import lief
+import pyxdelta
 
 ELF32_EHDR_FMT = "<16sHHIIIIIHHHHHH"
 ELF32_PHDR_FMT = "<IIIIIIII"
@@ -160,6 +161,9 @@ def main():
 
 	# Write the patched ELF file to disk.
 	rollingLief.write(f'../../elf/rolling_{REGION}_hostfs_patched.elf')
+
+	# Make the xdelta patch.
+	pyxdelta.run(f'../../elf/rolling_{REGION}.elf', f'../../elf/rolling_{REGION}_hostfs_patched.elf', f'../../rolling_{REGION}_hostfs_patch.xdelta')
 
 
 if __name__ == '__main__':

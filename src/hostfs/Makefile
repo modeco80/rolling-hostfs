@@ -39,7 +39,8 @@ endif
 
 # Pre deps
 EXTRATARGETS_PRE = $(LINKSCRIPT)
-EXTRATARGETS_POST = $(TOP)/elf/rolling_$(REGION)_hostfs_patched.elf
+EXTRATARGETS_POST = \
+	$(TOP)/rolling_$(REGION)_hostfs_patch.xdelta
 
 # All files that make up the mkpatch tool.
 # Used to make sure that we rebuild if the Python code is changed.
@@ -56,7 +57,7 @@ $(OBJDIR)/blob.ld: $(OBJDIR)/ blob.ld.in
 	$(info Preprocessing linker script $@)
 	sed 's|@REGION@|$(REGION)|' blob.ld.in > $@
 
-$(TOP)/elf/rolling_$(REGION)_hostfs_patched.elf: bin/$(NAME).elf $(MKPATCH_DEPS)
+$(TOP)/rolling_$(REGION)_hostfs_patch.xdelta: bin/$(NAME).elf $(MKPATCH_DEPS)
 	$(info Making patched ELF $@)
 	$(TOP)/tools/mkpatch.py $(REGION)
 
