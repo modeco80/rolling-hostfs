@@ -31,30 +31,30 @@
 	} hook_##funcName;                                                                        \
 	ret Hook_##funcName::hookImpl(__VA_ARGS__)
 
-#define FUNC_REPLACE0(funcName, ret)                                                             \
-	static class Hook_##funcName {                                                            \
-		HookHandle handle;                                                                    \
-		static ret hookImpl();                                                                \
-		\
-		public:                                                                                \
-			bool hook() {                                                                         \
-				handle = trampolineHook((void*)(&funcName), (void*)&hookImpl, nil(void**)); \
-				return handle != nil(HookHandle);                                                 \
-			}                                                                                     \
-	} hook_##funcName;                                                                        \
+#define FUNC_REPLACE0(funcName, ret)                                                    \
+	static class Hook_##funcName {                                                      \
+		HookHandle handle;                                                              \
+		static ret hookImpl();                                                          \
+                                                                                        \
+	   public:                                                                          \
+		bool hook() {                                                                   \
+			handle = trampolineHook((void*)(&funcName), (void*)&hookImpl, nil(void**)); \
+			return handle != nil(HookHandle);                                           \
+		}                                                                               \
+	} hook_##funcName;                                                                  \
 	ret Hook_##funcName::hookImpl()
 
-#define FUNC_REPLACE(funcName, ret, ...)                                                         \
-	static class Hook_##funcName {                                                            \
-		HookHandle handle;                                                                    \
-		static ret hookImpl(__VA_ARGS__);                                                     \
-		\
-		public:                                                                                \
-			bool hook() {                                                                         \
-				handle = trampolineHook((void*)(&funcName), (void*)&hookImpl, nil(void**)); \
-				return handle != nil(HookHandle);                                                 \
-			}                                                                                     \
-	} hook_##funcName;                                                                        \
+#define FUNC_REPLACE(funcName, ret, ...)                                                \
+	static class Hook_##funcName {                                                      \
+		HookHandle handle;                                                              \
+		static ret hookImpl(__VA_ARGS__);                                               \
+                                                                                        \
+	   public:                                                                          \
+		bool hook() {                                                                   \
+			handle = trampolineHook((void*)(&funcName), (void*)&hookImpl, nil(void**)); \
+			return handle != nil(HookHandle);                                           \
+		}                                                                               \
+	} hook_##funcName;                                                                  \
 	ret Hook_##funcName::hookImpl(__VA_ARGS__)
 
 #endif

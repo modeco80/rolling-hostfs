@@ -1,18 +1,18 @@
-#include <sce/cdvd.h>
-
 #include <ml/mem.h>
 #include <ml/string.h>
+#include <sce/cdvd.h>
+
+#include <utils/hook/fnhook.hpp>
+#include <utils/log.hpp>
 
 #include "file.hpp"
 #include "filemanager.hpp"
-#include <utils/hook/fnhook.hpp>
-#include <utils/log.hpp>
 
 // These hooks define a "fake" version of the sceCdSt* API functions,
 // which are fully compatible in place with the original APIs, but
 // use our FileMan_*/File APIs, which are hostfs.
 
-//#define CDST_DEBUG
+// #define CDST_DEBUG
 
 // Fake version of the sceCdlFILE struct we return.
 struct sceCdFile {
@@ -33,7 +33,7 @@ FUNC_REPLACE(sceCdSearchFile, i32, sceCdFile* pfile, const char* path) {
 		return -1;
 
 	// Copy the name to our temporary file name buffer.
-	memcpy(&gszCurrentCdStreamFileName[0], path, strlen(path)+1);
+	memcpy(&gszCurrentCdStreamFileName[0], path, strlen(path) + 1);
 
 	// Set up the fake cdlfile struct.
 	pfile->pszName = gszCurrentCdStreamFileName;

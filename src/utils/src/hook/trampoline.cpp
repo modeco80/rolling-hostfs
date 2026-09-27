@@ -1,10 +1,9 @@
-#include <utils/hook/trampoline.hpp>
-
 #include <ml/abort.h>
 #include <ml/mem.h>
 #include <ml/types.h>
 
 #include <ml/cxx/freelist.hpp>
+#include <utils/hook/trampoline.hpp>
 
 #include "mips.hpp"
 
