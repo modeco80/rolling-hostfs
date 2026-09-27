@@ -154,10 +154,31 @@ def main():
 
 	print(f'Original _end: 0x{origEnd:08x}, patch adjusted: 0x{adjustedEnd:08x}')
 
+	def patchString(addr: int, newString: str):
+		encoded = newString.encode('ascii') + b'\x00'
+		rollingLief.patch_address(addr, list(encoded))
+		print(f'Patched string at 0x{addr:08x}')
+
+	def patchEraseString(addr: int):
+		rollingLief.patch_address(addr, [0])
+		print(f'Erased string at 0x{addr:08x}')
+
 	# Patch the program break to be ahead of the core, so that memory allocations do not break us.
 	# Once done, patch the start of main() to jump to the core entry point.
 	rollingLief.patch_address(ldScript.symbol('__HOOK_sbrk_break'), adjustedEnd)
 	rollingLief.patch_address(ldScript.symbol('main'), list(MAIN_STATIC_TRAMPOLINE))
+
+	# Patch IOP module path strings for hostfs
+	patchString(ldScript.symbol('ModulePath'), 'host0:modules/%s.irx')
+	patchString(ldScript.symbol('ModuleRebootPackagePath'), 'host0:modules/ioprp255.img')
+
+	# Patch music path format string and wipe ISO version suffix
+	patchString(ldScript.symbol('MusicPath'), 'host0:music/%s')
+	patchEraseString(ldScript.symbol('MusicCdSuffix'))
+
+	# Wipe movie prefix and ISO version suffix
+	patchEraseString(ldScript.symbol('MoviePrefix'))
+	patchEraseString(ldScript.symbol('MovieCdSuffix'))
 
 	# Write the patched ELF file to disk.
 	rollingLief.write(f'../../elf/rolling_{REGION}_hostfs_patched.elf')
