@@ -27,7 +27,7 @@ struct sceCdFile {
 char gszCurrentCdStreamFileName[64];
 File* gpCurrentCdStreamFile = nil(File*);
 
-FUNC_HOOK(sceCdSearchFile, i32, sceCdFile* pfile, const char* path) {
+FUNC_REPLACE(sceCdSearchFile, i32, sceCdFile* pfile, const char* path) {
 	File* pHostFile = FileMan_openFile(path);
 	if(pHostFile == nil(File*))
 		return -1;
@@ -43,14 +43,14 @@ FUNC_HOOK(sceCdSearchFile, i32, sceCdFile* pfile, const char* path) {
 	return 1;
 }
 
-FUNC_HOOK(sceCdStInit, i32, u32 maxBuffers, u32 maxBanks, u32 iopBuffer) {
+FUNC_REPLACE(sceCdStInit, i32, u32 maxBuffers, u32 maxBanks, u32 iopBuffer) {
 #ifdef CDST_DEBUG
 	utilLog(LogInfo, "sceCdStInit() called");
 #endif
 	return 1;
 }
 
-FUNC_HOOK(sceCdStStart, i32, const char* pszFileName, void* rmode) {
+FUNC_REPLACE(sceCdStStart, i32, const char* pszFileName, void* rmode) {
 #ifdef CDST_DEBUG
 	utilLogf(LogInfo, "sceCdStStart() active, filename is %s", pszFileName);
 #endif
@@ -64,7 +64,7 @@ FUNC_HOOK(sceCdStStart, i32, const char* pszFileName, void* rmode) {
 	return 1;
 }
 
-FUNC_HOOK(sceCdStRead, i32, u32 sectorCount, u32* buf, u32 mode, u32* err) {
+FUNC_REPLACE(sceCdStRead, i32, u32 sectorCount, u32* buf, u32 mode, u32* err) {
 	if(gpCurrentCdStreamFile == nil(File*)) {
 		// no stream active
 #ifdef CDST_DEBUG
@@ -85,7 +85,7 @@ FUNC_HOOK(sceCdStRead, i32, u32 sectorCount, u32* buf, u32 mode, u32* err) {
 	return nRead / 0x800;
 }
 
-FUNC_HOOK0(sceCdStStop, i32) {
+FUNC_REPLACE0(sceCdStStop, i32) {
 #ifdef CDST_DEBUG
 	utilLogf(LogInfo, "sceCdStStop()");
 #endif

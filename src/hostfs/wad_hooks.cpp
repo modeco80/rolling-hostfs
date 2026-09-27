@@ -10,7 +10,7 @@
 #include "utils/hook/fnhook.hpp"
 #include "utils/log.hpp"
 
-FUNC_HOOK(Wad_Mount, void, const char* pszWad) {
+FUNC_REPLACE(Wad_Mount, void, const char* pszWad) {
 	// The memory card system, oddly enough, takes over the WAD read buffer
 	// to do some of its dirty work. I'm not sure as to why.
 	// This means we have to actually allocate it. What a strange design choice.
@@ -19,11 +19,11 @@ FUNC_HOOK(Wad_Mount, void, const char* pszWad) {
 	return;
 }
 
-FUNC_HOOK(Wad_Unmount, void) {
+FUNC_REPLACE(Wad_Unmount, void) {
 	return;
 }
 
-FUNC_HOOK(Wad_fexist, i32, const char* pszFileName) {
+FUNC_REPLACE(Wad_fexist, i32, const char* pszFileName) {
 	File* pFile = FileMan_openFile(pszFileName);
 	if(pFile == nil(File*))
 		return 0;
@@ -32,7 +32,7 @@ FUNC_HOOK(Wad_fexist, i32, const char* pszFileName) {
 	return 1;
 }
 
-FUNC_HOOK(Wad_fopen, void*, const char* path, const char* mode) {
+FUNC_REPLACE(Wad_fopen, void*, const char* path, const char* mode) {
 	File* pFile = FileMan_openFile(path);
 	if(pFile == nil(File*)) {
 		return vnil;
@@ -41,25 +41,25 @@ FUNC_HOOK(Wad_fopen, void*, const char* path, const char* mode) {
 	return reinterpret_cast<void*>(pFile);
 }
 
-FUNC_HOOK(Wad_fclose, void, void* handle) {
+FUNC_REPLACE(Wad_fclose, void, void* handle) {
 	FileMan_closeFile(reinterpret_cast<File*>(handle));
 }
 
-FUNC_HOOK(Wad_feof, i32, void* handle) {
+FUNC_REPLACE(Wad_feof, i32, void* handle) {
 	return reinterpret_cast<File*>(handle)->eof() ? 1 : 0;
 }
 
-FUNC_HOOK(Wad_fseek, i32, void* handle, i32 offset, i32 whence) {
+FUNC_REPLACE(Wad_fseek, i32, void* handle, i32 offset, i32 whence) {
 	return reinterpret_cast<File*>(handle)->seek(offset, whence);
 }
 
-FUNC_HOOK(Wad_fread, i32, void* pBuffer, i32 size, i32 nitems, void* wadfile) {
+FUNC_REPLACE(Wad_fread, i32, void* pBuffer, i32 size, i32 nitems, void* wadfile) {
 	i32 count = reinterpret_cast<File*>(wadfile)->read(reinterpret_cast<u8*>(pBuffer), nitems * size);
 	Wad_ReadCount++;
 	return count;
 }
 
-FUNC_HOOK(Wad_fgets, i32, char* pszIn, i32 pszLen, void* handle) {
+FUNC_REPLACE(Wad_fgets, i32, char* pszIn, i32 pszLen, void* handle) {
 	// For now, since I do not think this is ever actually called,
 	// just stub it out.
 #ifdef FIOMAN_DEBUG
@@ -68,7 +68,7 @@ FUNC_HOOK(Wad_fgets, i32, char* pszIn, i32 pszLen, void* handle) {
 	return 0;
 }
 
-FUNC_HOOK(Wad_ReadAll, void*, const char* pszFileName) {
+FUNC_REPLACE(Wad_ReadAll, void*, const char* pszFileName) {
 	File* pFile = FileMan_openFile(pszFileName);
 	if(pFile == nil(File*))
 		return vnil;
@@ -88,7 +88,7 @@ FUNC_HOOK(Wad_ReadAll, void*, const char* pszFileName) {
 	return pvBuf;
 }
 
-FUNC_HOOK(Wad_ReadAllInto, i32, const char* pszFileName, void* pBuffer, i32 count) {
+FUNC_REPLACE(Wad_ReadAllInto, i32, const char* pszFileName, void* pBuffer, i32 count) {
 	File* pFile = FileMan_openFile(pszFileName);
 	if(pFile == nil(File*))
 		return -1;
