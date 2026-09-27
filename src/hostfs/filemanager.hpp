@@ -2,14 +2,12 @@
 #define FILEMANAGER_HPP
 
 #include <ml/types.h>
+#include "file.hpp"
 
-// The max amount of files which can be open at once.
-#define FILEMAN_MAX_FILES 8
-
-// file.cpp
-class File;
-
+/// Open a file for reading from HostFS.
 File* FileMan_openFile(const char* pszFileName);
+
+/// Closes a file previously opened by FileMan_openFile().
 void FileMan_closeFile(File* pFile);
 
 #endif

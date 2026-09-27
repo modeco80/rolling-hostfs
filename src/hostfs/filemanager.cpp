@@ -1,5 +1,7 @@
 #include "filemanager.hpp"
 
+#include "filemanager_config.hpp"
+
 #include <ml/abort.h>
 #include <ml/mem.h>
 #include <sce/fio.h>
@@ -9,6 +11,9 @@
 
 #include "file.hpp"
 #include "utils/log.hpp"
+
+// The max amount of files which can be open at once.
+#define FILEMAN_MAX_FILES 8
 
 namespace {
 	ml::FreeList<File, FILEMAN_MAX_FILES> openFileList;
@@ -35,13 +40,13 @@ File* FileMan_openFile(const char* path) {
 	char translatedPath[512];
 	translateFileName(&translatedPath[0], path);
 
-#if defined(FIOMAN_DEBUG) && defined(FIOMAN_DEBUG_OPEN)
+#if defined(FILEMAN_DEBUG) && defined(FILEMAN_DEBUG_OPEN)
 	utilLogf(LogInfo, "HostFS Open %s", translatedPath);
 #endif
 
 	i32 fd = sceOpen(translatedPath, SCE_RDONLY);
 	if(fd < 0) {
-#if defined(FIOMAN_DEBUG) && defined(FIOMAN_DEBUG_OPEN)
+#if defined(FILEMAN_DEBUG) && defined(FILEMAN_DEBUG_OPEN)
 		utilLogf(LogErr, "HostFS Open FAIL %s", translatedPath);
 #endif
 		openFileList.free(pFile);

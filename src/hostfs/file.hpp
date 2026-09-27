@@ -3,10 +3,7 @@
 
 #include <ml/types.h>
 
-#define FIOMAN_DEBUG
-#define FIOMAN_DEBUG_OPEN
-// #define FIOMAN_DEBUG_READ // verbose as hell
-// #define FIOMAN_DEBUG_SEEK
+
 
 /// Wrapper over EE FIO which is a bit easier to use and adds buffering
 class File {
@@ -18,8 +15,6 @@ class File {
 	u32 readBufferAvailable;
 	u32 readBufferStart;
 	u8* readBuffer;
-
-	void cacheSize();
 
    public:
 	explicit File(i32 fd);
