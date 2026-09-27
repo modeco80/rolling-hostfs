@@ -80,3 +80,6 @@ Wad_ReadAllInto = 0x00140830;
 
 Wad_ReadAllFileSize = 0x004aeaa0;
 Wad_ReadCount = 0x004aeaac;
+
+Wad_ReadBufferAllocated = 0x004aea60;
+Wad_ReadBuffer = 0x004aea5c;

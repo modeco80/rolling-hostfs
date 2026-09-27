@@ -12,6 +12,9 @@ extern "C" {
 extern i32 Wad_ReadCount;
 extern i32 Wad_ReadAllFileSize;
 
+extern void* Wad_ReadBuffer;
+extern i32 Wad_ReadBufferAllocated;
+
 void Wad_InstallFileSystem();
 void Wad_Mount(const char* pszPath);
 void Wad_Unmount();
