@@ -6,7 +6,7 @@
 
 /// the size of the read buffer inside each FioFile instance
 /// Try to keep this sensible
-#define FIOMAN_READ_BUFFER_SIZE 0x800
+#define FIOMAN_READ_BUFFER_SIZE 0x1000
 
 void File::cacheSize() {
 	sceLSeek(fd, 0, SCE_SEEK_END);
