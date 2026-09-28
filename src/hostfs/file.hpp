@@ -3,7 +3,9 @@
 
 #include <ml/types.h>
 
-/// Wrapper over EE FIO which is a bit easier to use and adds buffering
+/// Wrapper over EE FIO which is a bit easier to use and adds buffering.
+/// This class is expected to be used with an previously opened file descriptor.
+/// When in doubt, use the FileMan* APIs to get a File instance with a pre-opened file.
 class File {
 	i32 fd;
 	u32 fileSize;

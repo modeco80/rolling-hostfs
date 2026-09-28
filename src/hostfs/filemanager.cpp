@@ -1,6 +1,6 @@
 #include "filemanager.hpp"
-
 #include "filemanager_config.hpp"
+#include "file.hpp"
 
 #include <ml/abort.h>
 #include <ml/mem.h>
@@ -9,11 +9,7 @@
 #include <ml/cxx/freelist.hpp>
 #include <new>
 
-#include "file.hpp"
-#include "utils/log.hpp"
-
-// The max amount of files which can be open at once.
-#define FILEMAN_MAX_FILES 8
+#include <utils/log.hpp>
 
 namespace {
 	ml::FreeList<File, FILEMAN_MAX_FILES> openFileList;

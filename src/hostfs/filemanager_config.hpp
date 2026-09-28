@@ -10,4 +10,8 @@
 /// Try to keep this sensible. 16 KB is a decent default size.
 #define FILEMAN_READ_BUFFER_SIZE 0x1000
 
+/// The max amount of files which can be opened at once with
+/// the FileMan_* APIs.
+#define FILEMAN_MAX_FILES 8
+
 #endif
