@@ -3,8 +3,6 @@
 
 #include <ml/types.h>
 
-
-
 /// Wrapper over EE FIO which is a bit easier to use and adds buffering
 class File {
 	i32 fd;

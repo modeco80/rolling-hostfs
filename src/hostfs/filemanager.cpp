@@ -22,11 +22,16 @@ namespace {
 		mlStaticStrCpy(pszOut, "host0:");
 		strcat(pszOut, pszInPath);
 
-		// Fix up the objectively incorrect directory seperator to the correct one.
 		const u32 len = strlen(pszOut);
-		for(u32 i = sizeof("host0:") - 1; i < len; ++i)
+		for(u32 i = sizeof("host0:") - 1; i < len; ++i) {
+			// Clean up the case of file paths so it is entirely lowercase.
+			if(pszOut[i] >= 'A' && pszOut[i] <= 'Z')
+				pszOut[i] |= 0x20;
+
+			// Fix up the objectively incorrect directory seperator to the correct one.
 			if(pszOut[i] == '\\')
 				pszOut[i] = '/';
+		}
 	}
 } // namespace
 
