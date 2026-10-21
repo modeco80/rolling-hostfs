@@ -8,8 +8,6 @@
 
 compile_commands.json
 
-src/freecam/*.pnach
-
 # no good
 tools/cc
 

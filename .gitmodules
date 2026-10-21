@@ -1,0 +1,3 @@
+[submodule "patchsdk"]
+	path = patchsdk
+	url = https://github.com/modeco80/ps2patchsdk

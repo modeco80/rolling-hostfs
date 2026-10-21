@@ -18,15 +18,15 @@ SOURCES := \
 
 LINKSCRIPT = $(OBJDIR)/blob.ld
 LINKLIBS := \
-	../utils/obj/libutils.a \
-	../ml/lib/core/obj/libml3_core.a \
-	../ml/lib/cxx/obj/libml3_cxx.a \
-	../ml/lib/hw/obj/libml3_hw.a \
+	$(PATCHSDK)/src/utils/obj/libutils.a \
+	$(PATCHSDK)/src/ml/lib/core/obj/libml3_core.a \
+	$(PATCHSDK)/src/ml/lib/cxx/obj/libml3_cxx.a \
+	$(PATCHSDK)/src/ml/lib/hw/obj/libml3_hw.a \
 
 # User C/CXX flags.
 USER_CFLAGS = -DMOD_REGION_$(REGION) \
-	-I $(TOP)/src/rollapi/include \
-	-I $(TOP)/src/utils/include
+	-I $(TOP)/rollapi/include \
+	-I $(PATCHSDK)/src/utils/include
 USER_CXXFLAGS := \
 	-Wno-pmf-conversions
 
@@ -40,22 +40,19 @@ EXTRATARGETS_PRE = $(LINKSCRIPT)
 EXTRATARGETS_POST = \
 	$(TOP)/rolling_$(REGION)_hostfs_patch.xdelta
 
-# All files that make up the mkpatch tool.
+# All files that make up patch generation (besides the mkpatch Python package)
 # Used to make sure that we rebuild if the Python code is changed.
-MKPATCH_DEPS := \
-	$(TOP)/tools/mkpatch.py \
-	$(TOP)/tools/utils/elf.py \
-	$(TOP)/tools/utils/ldparse.py \
-	$(TOP)/tools/utils/mips.py
+PATCHGEN_DEPS := \
+	patchgen.py \
 
-include $(TOP)/mk/makedef.mk
+include $(PATCHSDK)/mk/makedef.mk
 
 # Preprocess the linker script to include game symbols here.
 $(OBJDIR)/blob.ld: $(OBJDIR)/ blob.ld.in
 	$(info Preprocessing linker script $@)
 	sed 's|@REGION@|$(REGION)|' blob.ld.in > $@
 
-$(TOP)/rolling_$(REGION)_hostfs_patch.xdelta: bin/$(NAME).elf $(MKPATCH_DEPS)
+$(TOP)/rolling_$(REGION)_hostfs_patch.xdelta: bin/$(NAME).elf $(PATCHGEN_DEPS)
 	$(info Making patched ELF $@)
-	$(TOP)/tools/mkpatch.py $(REGION)
+	./patchgen.py $(REGION) $@
 

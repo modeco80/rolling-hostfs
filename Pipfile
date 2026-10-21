@@ -8,6 +8,7 @@ pyelftools = "*"
 regex = "*"
 lief = "*"
 pyxdelta = "*"
+mkpatch = { file = "patchsdk/tools/mkpatch", editable = true }
 
 [dev-packages]
 
